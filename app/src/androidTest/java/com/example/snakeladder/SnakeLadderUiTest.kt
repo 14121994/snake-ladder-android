@@ -1043,6 +1043,44 @@ class SnakeLadderUiTest {
     }
 
     @Test
+    fun boardScreen_disabledPowerUpExplainsBotTurnReason() {
+        val state = sampleGameState(
+            gameMode = GameMode.VS_BOT,
+            currentPlayerIndex = 1,
+            botPlayerIndex = 1
+        ).copy(
+            matchMode = MatchModePreset.PARTY_RULES,
+            ruleSetId = RuleSets.PARTY_ID,
+            powerUpInventories = listOf(emptyList(), listOf(PowerUpType.TRAP))
+        )
+
+        setBoardContent(
+            orientation = Configuration.ORIENTATION_PORTRAIT,
+            state = state
+        )
+
+        composeRule.onNodeWithTag("power_up_inventory_panel").assertIsDisplayed()
+        composeRule.onNodeWithTag("power_up_trap").assertIsNotEnabled()
+        composeRule.onNodeWithTag("power_up_disabled_reason").assertTextEquals(
+            "Bot turn. Power-ups are available only on your turn."
+        )
+
+        val disabledDescription = composeRule.onNodeWithTag("power_up_trap", useUnmergedTree = true)
+            .fetchSemanticsNode("Disabled power-up missing")
+            .config
+            .getOrElseNullable(SemanticsProperties.ContentDescription) { null }
+            .orEmpty()
+            .joinToString(" ")
+        assertTrue(disabledDescription.contains("Disabled. Bot turn. Power-ups are available only on your turn."))
+
+        val stateDescription = composeRule.onNodeWithTag("power_up_trap", useUnmergedTree = true)
+            .fetchSemanticsNode("Disabled power-up missing")
+            .config
+            .getOrElseNullable(SemanticsProperties.StateDescription) { null }
+        assertEquals("Disabled: Bot turn. Power-ups are available only on your turn.", stateDescription)
+    }
+
+    @Test
     fun boardScreen_botPowerUpFeedbackExplainsChoiceReason() {
         val state = sampleGameState(
             gameMode = GameMode.VS_BOT,

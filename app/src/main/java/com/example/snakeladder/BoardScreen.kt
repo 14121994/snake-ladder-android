@@ -87,6 +87,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
@@ -2861,6 +2862,14 @@ private fun ControlCard(
     val botRollNeedsConfirmation = isBotTurn && manualBotRollConfirmation
     val playerCanRoll = state.winnerIndex == null && !isRolling && !isMoveAnimating && (!isBotTurn || manualBotRollConfirmation)
     val playerCanUsePowerUp = playerCanRoll && !isPaused && !isBotTurn
+    val powerUpUnavailableReason = when {
+        playerCanUsePowerUp -> null
+        state.winnerIndex != null -> "Match complete."
+        isPaused -> "Resume the match before using power-ups."
+        isBotTurn -> "Bot turn. Power-ups are available only on your turn."
+        isRolling || isMoveAnimating -> "Wait for the current roll and movement to finish."
+        else -> "Available on your turn before rolling."
+    }
     val currentInventory = state.powerUpInventories.getOrNull(state.currentPlayerIndex).orEmpty()
     val bonusReason = state.bonusTurnReason()
     val isCardMode = state.matchMode == MatchModePreset.TACTICAL_CARDS
@@ -3027,6 +3036,7 @@ private fun ControlCard(
                     isCardMode = isCardMode,
                     botPlayerIndex = state.botPlayerIndex,
                     enabled = playerCanUsePowerUp,
+                    disabledReason = powerUpUnavailableReason,
                     compact = compact,
                     onUsePowerUp = onUsePowerUp,
                     onCancelArmedPowerUp = onCancelArmedPowerUp
@@ -3635,6 +3645,7 @@ private fun PowerUpInventoryPanel(
     isCardMode: Boolean,
     botPlayerIndex: Int?,
     enabled: Boolean,
+    disabledReason: String?,
     compact: Boolean,
     onUsePowerUp: (PowerUpType) -> Unit,
     onCancelArmedPowerUp: (PowerUpType) -> Unit
@@ -3647,7 +3658,7 @@ private fun PowerUpInventoryPanel(
                 .thenBy { it.ordinal }
         )
     var collapsed by rememberSaveable { mutableStateOf(false) }
-    val disabledReason = if (enabled) null else "Available on your turn before rolling."
+    val unavailableReason = disabledReason ?: "Available on your turn before rolling."
     val horizontalScrollState = rememberScrollState()
     val panelTitle = if (isCardMode) "Cards" else "Power-ups"
 
@@ -3731,6 +3742,7 @@ private fun PowerUpInventoryPanel(
                         compact = compact,
                         isCardMode = isCardMode,
                         trapPreviewCell = trapPreviewCell,
+                        disabledReason = unavailableReason,
                         onUsePowerUp = onUsePowerUp,
                         onCancelArmedPowerUp = onCancelArmedPowerUp
                     )
@@ -3744,12 +3756,13 @@ private fun PowerUpInventoryPanel(
                     modifier = Modifier.testTag("power_up_scroll_hint")
                 )
             }
-            disabledReason?.let {
+            if (!enabled) {
                 Text(
-                    text = it,
+                    text = unavailableReason,
                     fontSize = 9.sp,
                     lineHeight = 11.sp,
-                    color = Color(0xFF746185),
+                    color = Color(0xFF4A385F),
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.testTag("power_up_disabled_reason")
                 )
             }
@@ -3815,6 +3828,7 @@ private fun PowerUpActionButton(
     compact: Boolean,
     isCardMode: Boolean,
     trapPreviewCell: Int,
+    disabledReason: String,
     onUsePowerUp: (PowerUpType) -> Unit,
     onCancelArmedPowerUp: (PowerUpType) -> Unit
 ) {
@@ -3835,15 +3849,16 @@ private fun PowerUpActionButton(
                     val countText = if (armed && count == 0) "queued" else "$count available"
                     "${powerUp.label}, $countText. $description"
                 } else {
-                    "${powerUp.label}, $count available. Disabled. Available on your turn before rolling."
+                    "${powerUp.label}, $count available. Disabled. $disabledReason"
                 }
+                stateDescription = if (enabled) "Enabled" else "Disabled: $disabledReason"
             },
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = activeContainerColor,
-            disabledContainerColor = Color(0xFFE8E0F1),
+            disabledContainerColor = Color(0xFFF7F3FF),
             contentColor = Color.White,
-            disabledContentColor = Color(0xFF6B6076)
+            disabledContentColor = Color(0xFF3E334C)
         ),
         contentPadding = PaddingValues(horizontal = 6.dp, vertical = if (compact) 5.dp else 7.dp),
         onClick = {
@@ -3879,7 +3894,7 @@ private fun PowerUpActionButton(
                 text = description,
                 fontSize = if (compact) 8.sp else 9.sp,
                 lineHeight = if (compact) 9.sp else 10.sp,
-                color = if (enabled) Color(0xFFEFE5FF) else Color(0xFF6B6076),
+                color = if (enabled) Color(0xFFEFE5FF) else Color(0xFF3E334C),
                 maxLines = 2
             )
         }
@@ -3895,10 +3910,10 @@ private fun PowerUpIconBadge(
         modifier = Modifier
             .size(22.dp)
             .clip(RoundedCornerShape(6.dp))
-            .background(if (enabled) powerUp.badgeColor() else Color(0xFFD7D0DF))
+            .background(if (enabled) powerUp.badgeColor() else Color.White)
             .border(
                 1.dp,
-                if (enabled) Color(0xFFFFFFFF) else Color(0xFFB8AFBF),
+                if (enabled) Color(0xFFFFFFFF) else Color(0xFF8F7EA3),
                 RoundedCornerShape(6.dp)
             ),
         contentAlignment = Alignment.Center
@@ -3907,7 +3922,7 @@ private fun PowerUpIconBadge(
             text = powerUp.iconText(),
             fontSize = 8.sp,
             fontWeight = FontWeight.ExtraBold,
-            color = if (enabled) Color.White else Color(0xFF51495C),
+            color = if (enabled) Color.White else Color(0xFF3E334C),
             textAlign = TextAlign.Center
         )
     }
@@ -3922,10 +3937,10 @@ private fun CountPill(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(if (enabled) Color(0x33FFFFFF) else Color(0xFFEDE8F4))
+            .background(if (enabled) Color(0x33FFFFFF) else Color.White)
             .border(
                 1.dp,
-                if (enabled) Color(0x66FFFFFF) else Color(0xFFC9BED7),
+                if (enabled) Color(0x66FFFFFF) else Color(0xFF8F7EA3),
                 RoundedCornerShape(999.dp)
             )
             .padding(horizontal = 5.dp, vertical = 1.dp),
@@ -3935,7 +3950,7 @@ private fun CountPill(
             text = if (armed && count == 0) "Queued" else "x$count",
             fontSize = 8.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (enabled) Color.White else Color(0xFF6B6076)
+            color = if (enabled) Color.White else Color(0xFF3E334C)
         )
     }
 }
