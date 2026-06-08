@@ -52,6 +52,7 @@ The main drag is presentation density. Many controls are packed into large modal
 36. New Game setup step navigation for Setup, Mode, Board, and Review, including selected-step state and jump-to-section behavior.
 37. Exit and Restart confirmation dialog shell, including consistent scrim, top-right close action, safe-area padding, and above-navigation action placement.
 38. Launcher local-save status, saved-state copy, enabled Load Saved/Resume Latest state, and recreation-based resume regression.
+39. Adaptive launcher landscape/tablet layout with a current-setup rail, wide two-row action grid, and readable dense launch action labels.
 
 ## Evidence Captures
 
@@ -201,6 +202,8 @@ Screenshots and UI XML captures were saved under `/private/tmp/` during live tes
 - `/private/tmp/snake_save_status_launch.xml`
 - `/private/tmp/snake_save_status_resumed_board.png`
 - `/private/tmp/snake_save_status_resumed_board.xml`
+- `/private/tmp/snake_adaptive_launch_landscape.png`
+- `/private/tmp/snake_adaptive_launch_landscape.xml`
 
 ## Latest Verification
 
@@ -292,12 +295,24 @@ Screenshots and UI XML captures were saved under `/private/tmp/` during live tes
   - BRANCH coverage: 90.63% (1199/1323)
   - METHOD coverage: 96.05% (560/583)
   - CLASS coverage: 98.70% (76/77)
+- Implemented an adaptive launcher layout for landscape and tablet-width launch states. Landscape/tablet launch now uses a current-setup rail, a wide two-row action grid, and denser launch action labels so `Quick Start`, `New Game`, `Play Daily`, `Campaign`, and `Load Saved` remain readable.
+- Added focused launcher instrumentation coverage for the landscape rail/action layout and tablet-width rail/resume state.
+- `./gradlew :app:compileDebugKotlin :app:compileDebugAndroidTestKotlin --console=plain` passed after the adaptive launcher implementation.
+- `./gradlew :app:connectedDebugAndroidTest --console=plain -Pandroid.testInstrumentationRunnerArguments.class=com.example.snakeladder.SnakeLadderUiTest#launchScreen_componentsVisibleInLandscape,com.example.snakeladder.SnakeLadderUiTest#launchScreen_tabletWidthUsesAdaptiveRailWithSavedState` passed.
+- Manual device pass on RMX3998 used a temporary `wm size 2400x1080` landscape viewport, captured the adaptive launcher screenshot/XML, verified the wide action labels were not truncated, and reset the device to `Physical size: 1080x2400`.
+- The first full coverage attempt hit transient Compose harness failures (`No compose hierarchies found`) in four existing `SnakeLadderUiTest` methods; those four methods passed on focused rerun before the clean full coverage rerun.
+- `./gradlew :app:checkDebugCoverage --console=plain` passed with these metrics:
+  - INSTRUCTION coverage: 97.53% (21043/21576)
+  - LINE coverage: 99.20% (3093/3118)
+  - BRANCH coverage: 90.63% (1199/1323)
+  - METHOD coverage: 96.57% (563/583)
+  - CLASS coverage: 100.00% (77/77)
 
 ## Player Feedback
 
 The board game itself feels familiar and approachable. Cell numbering is generally legible, snake and ladder paths are visible, and the token states are understandable. The party mode with power-ups is the most interesting advanced layer because it adds decisions without abandoning Snake & Ladder.
 
-The launch screen feels polished at first glance, but it immediately shows truncation in important buttons. The new-game setup is feature-rich but modal-heavy, and a lot of expert-facing setup is below the fold. Store, Campaign, Progress, and Pro Features all work, but they read as dense panels rather than game-native experiences. The save/load path was concerning because after saving a named game, Load Saved Game still appeared disabled on the launcher.
+The launch screen now reads better in the tested landscape/tablet-style viewport, with primary launch actions visible and readable. The new-game setup is feature-rich but modal-heavy, and a lot of expert-facing setup is below the fold. Store, Campaign, Progress, and Pro Features all work, but they still read as dense panels rather than game-native experiences.
 
 ## UI Improvement Points
 
@@ -311,14 +326,14 @@ Status note: when a UI pointer is reviewed during an implementation pass, it is 
 6. [Partially implemented] Use snackbar or toast placement that is visible above nav bar.
 7. [Partially implemented] Make Close button consistently positioned across all dialogs. Exit and Restart confirmations now use a top-right close affordance with content descriptions; remaining dialogs still need full alignment.
 8. [Partially implemented] Use safe-area padding above the navigation bar. Exit and Restart confirmations now use system-bar padding and keep actions above the nav area; other modal surfaces still need review.
-9. Improve landscape-specific layouts if supported.
-10. Add tablet layout breakpoints for board and controls.
+9. [Partially implemented] Improve landscape-specific layouts if supported. The launcher now switches to a current-setup rail plus a two-row wide action grid in landscape; board and dialog landscape layouts still need review.
+10. [Partially implemented] Add tablet layout breakpoints for board and controls. The launcher now uses a 700dp breakpoint with tested rail/wide action behavior; board and in-match controls still need tablet-specific breakpoints.
 11. Avoid putting cards inside card-heavy modal stacks.
 12. Improve contrast of gray disabled text on purple surfaces.
-13. [Partially implemented] Make all tappable surfaces meet a consistent visual style. Exit and Restart confirmation actions now share one destructive-confirmation layout; broader button/chip styling still needs a full sweep.
+13. [Partially implemented] Make all tappable surfaces meet a consistent visual style. Exit and Restart confirmation actions now share one destructive-confirmation layout, and launcher wide actions now share readable dense button treatment; broader button/chip styling still needs a full sweep.
 14. [Partially implemented] Add accessibility labels for non-text icon states.
-15. Verify dynamic font scaling at large accessibility sizes.
-16. [Partially implemented] Add visual regression checks for truncation-prone labels. Exit/Restart confirmation shell tests and local-save status tests now assert key text/controls; broader screenshot-level truncation coverage is still pending.
+15. [Partially implemented] Verify dynamic font scaling at large accessibility sizes. The landscape launcher action labels and setup rail were manually checked after dense-label tuning; broader large-font validation remains pending.
+16. [Partially implemented] Add visual regression checks for truncation-prone labels. Exit/Restart confirmation shell tests, local-save status tests, and adaptive launcher landscape/tablet tests now assert key text/controls; broader screenshot-level truncation coverage is still pending.
 
 ## UX Improvement Points
 
@@ -342,7 +357,7 @@ Status note: when a UX pointer is reviewed during an implementation pass, it is 
 16. Preserve replay after exit.
 17. [Partially implemented] Provide non-audio equivalents for cues.
 18. [Partially implemented] Ensure disabled buttons explain why to screen readers.
-19. Support larger fonts without hiding actions.
+19. [Partially implemented] Support larger fonts without hiding actions. The landscape/tablet launcher now uses denser readable action labels and keeps major launch actions visible at the tested device scale; remaining flows still need large-font validation.
 20. Add localization readiness for long labels.
 21. Avoid hardcoded English-heavy dense strings.
 22. [Partially implemented] Make offline-first behavior explicit where useful. The launcher now labels saves as local/on-this-device and clarifies that saved matches are enabled through Save Game in Settings; other offline-only surfaces still need review.
@@ -352,8 +367,8 @@ Status note: when a UX pointer is reviewed during an implementation pass, it is 
 26. [Partially implemented] Remember scroll positions only when useful across all long dialogs.
 27. [Partially implemented] Reset dialog scroll on reopen for predictable starts across all long dialogs.
 28. [Partially implemented] Test save/load after app process restart. Added a MainActivity recreation regression that verifies a persisted save is visible on relaunch and Resume Latest restores the board; full OS process-death coverage remains pending.
-29. [Partially implemented] Keep all major actions reachable with one hand. Exit/Restart destructive and cancel actions now remain above the navigation bar; other long dialogs still need one-hand reach checks.
-30. [Partially implemented] Reduce required vertical scrolling before playing. New Game setup can now jump directly to Mode, Board, and Review; other long dialogs still need similar shortcuts.
+29. [Partially implemented] Keep all major actions reachable with one hand. Exit/Restart destructive and cancel actions now remain above the navigation bar, and the landscape/tablet launcher keeps Quick Start, New Game, Daily, Campaign, and Load Saved in a two-row action grid; other long dialogs still need one-hand reach checks.
+30. [Partially implemented] Reduce required vertical scrolling before playing. New Game setup can now jump directly to Mode, Board, and Review, and the landscape/tablet launcher keeps setup context in a rail while primary actions remain in the first viewport; other long dialogs still need similar shortcuts.
 31. Avoid making player wait through nonessential transitions.
 32. Make animations optional but polished by default.
 33. Support short-session mode from launch.
@@ -362,7 +377,7 @@ Status note: when a UX pointer is reviewed during an implementation pass, it is 
 36. Make current player announcement large but brief.
 37. Add tutorial tips that disappear after first use.
 38. Let experienced players disable tips.
-39. [Partially implemented] Add UX tests for every top-level launch flow. Added New Game step-strip instrumentation coverage plus Exit/Restart confirmation shell coverage.
+39. [Partially implemented] Add UX tests for every top-level launch flow. Added New Game step-strip instrumentation coverage, Exit/Restart confirmation shell coverage, and adaptive launcher landscape/tablet coverage.
 40. [Partially implemented] Add end-to-end tests for save, load, exit, and resume. Exit confirmation behavior has focused UI coverage, launch setup persistence has invalid/fallback coverage, and persisted Resume Latest after activity recreation is now covered; full save-exit-load-resume E2E remains pending.
 
 ## Highest Priority Fixes
