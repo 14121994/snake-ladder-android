@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Royal snake and ladder badge logo">
+  <defs>
+    <radialGradient id="bg2" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#243B53"/>
+      <stop offset="100%" stop-color="#102A43"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg2)"/>
+  <circle cx="512" cy="512" r="352" fill="#0F172A" stroke="#F8D27A" stroke-width="28"/>
+  <circle cx="512" cy="512" r="292" fill="#F8FAFC"/>
+
+  <g transform="translate(512 512)">
+    <rect x="-170" y="-150" width="340" height="300" rx="40" fill="#E9F2FF" stroke="#AAC4EE" stroke-width="10"/>
+    <g stroke="#B8CCE9" stroke-width="6">
+      <path d="M-102 -150V150M-34 -150V150M34 -150V150M102 -150V150"/>
+      <path d="M-170 -90H170M-170 -30H170M-170 30H170M-170 90H170"/>
+    </g>
+
+    <g stroke="#C58C2D" stroke-width="16" stroke-linecap="round">
+      <path d="M-82 84L-10 -88"/>
+      <path d="M-32 104L40 -68"/>
+    </g>
+    <g stroke="#E5B04A" stroke-width="9" stroke-linecap="round">
+      <path d="M-70 54L2 84M-56 22L16 52M-42 -10L30 20M-28 -42L44 -12"/>
+    </g>
+
+    <path d="M128 -74C90 -70 66 -44 62 -14C58 20 78 40 118 62C162 88 172 126 156 159C136 198 95 213 52 204" fill="none" stroke="#C81E4A" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="131" cy="-82" r="24" fill="#C81E4A"/>
+    <circle cx="138" cy="-87" r="3.5" fill="#111827"/>
+    <circle cx="124" cy="-87" r="3.5" fill="#111827"/>
+  </g>
+
+  <text x="512" y="908" text-anchor="middle" font-family="Trebuchet MS, Verdana, sans-serif" font-size="68" font-weight="700" fill="#F8D27A">SL CLASSIC</text>
+</svg>

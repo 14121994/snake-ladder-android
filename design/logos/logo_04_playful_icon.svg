@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Playful snake and ladder game icon">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1D4ED8"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg4)"/>
+
+  <rect x="248" y="208" width="528" height="608" rx="56" fill="#FFFFFF"/>
+  <rect x="286" y="246" width="452" height="532" rx="38" fill="#EEF4FF"/>
+
+  <g stroke="#C7D7F8" stroke-width="8">
+    <path d="M341 246V778M396 246V778M451 246V778M506 246V778M561 246V778M616 246V778M671 246V778"/>
+    <path d="M286 302H738M286 358H738M286 414H738M286 470H738M286 526H738M286 582H738M286 638H738M286 694H738"/>
+  </g>
+
+  <g stroke="#CA8A04" stroke-width="18" stroke-linecap="round">
+    <path d="M386 666L470 434"/>
+    <path d="M444 686L528 454"/>
+  </g>
+  <g stroke="#FCD34D" stroke-width="10" stroke-linecap="round">
+    <path d="M400 626L484 654M416 586L500 614M432 546L516 574M448 506L532 534"/>
+  </g>
+
+  <path d="M660 332C622 334 594 356 588 388C582 420 600 446 636 466C680 490 696 526 684 564C670 610 622 636 574 628" fill="none" stroke="#DC2626" stroke-width="34" stroke-linecap="round"/>
+  <circle cx="668" cy="328" r="28" fill="#DC2626"/>
+  <circle cx="676" cy="321" r="4" fill="#111827"/>
+  <circle cx="660" cy="321" r="4" fill="#111827"/>
+
+  <rect x="430" y="94" width="164" height="164" rx="30" fill="#111827"/>
+  <circle cx="476" cy="142" r="12" fill="#FFFFFF"/>
+  <circle cx="548" cy="142" r="12" fill="#FFFFFF"/>
+  <circle cx="476" cy="210" r="12" fill="#FFFFFF"/>
+  <circle cx="548" cy="210" r="12" fill="#FFFFFF"/>
+
+  <text x="512" y="920" text-anchor="middle" font-family="Verdana, sans-serif" font-size="64" font-weight="700" fill="#F8FAFC">ROLL &amp; RISE</text>
+</svg>

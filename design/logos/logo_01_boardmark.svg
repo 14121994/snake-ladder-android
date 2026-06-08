@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Snake and Ladder board logo">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#0B1026"/>
+    </linearGradient>
+    <linearGradient id="ladder1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD166"/>
+      <stop offset="100%" stop-color="#E09F3E"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg1)"/>
+
+  <rect x="188" y="188" width="648" height="648" rx="70" fill="#F8FAFC"/>
+  <rect x="220" y="220" width="584" height="584" rx="48" fill="#EAF2FF"/>
+
+  <g stroke="#B9CDF4" stroke-width="8">
+    <path d="M278 220V804M336 220V804M394 220V804M452 220V804M510 220V804M568 220V804M626 220V804M684 220V804M742 220V804"/>
+    <path d="M220 278H804M220 336H804M220 394H804M220 452H804M220 510H804M220 568H804M220 626H804M220 684H804M220 742H804"/>
+  </g>
+
+  <g stroke="url(#ladder1)" stroke-width="22" stroke-linecap="round">
+    <path d="M355 665L455 430"/>
+    <path d="M420 693L520 458"/>
+  </g>
+  <g stroke="#F4B942" stroke-width="12" stroke-linecap="round">
+    <path d="M370 630L470 658M388 589L488 617M406 548L506 576M424 507L524 535"/>
+  </g>
+
+  <path d="M716 314C670 320 639 352 633 389C626 434 654 465 707 495C772 532 786 587 761 634C733 686 674 707 612 693"
+        fill="none" stroke="#D7263D" stroke-width="40" stroke-linecap="round"/>
+  <circle cx="722" cy="304" r="36" fill="#D7263D"/>
+  <circle cx="734" cy="296" r="5" fill="#0B1026"/>
+  <circle cx="710" cy="296" r="5" fill="#0B1026"/>
+
+  <text x="512" y="920" text-anchor="middle" font-family="Verdana, sans-serif" font-size="72" font-weight="700" fill="#F8FAFC">SNAKE &amp; LADDER</text>
+</svg>

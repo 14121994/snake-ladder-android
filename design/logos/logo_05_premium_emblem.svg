@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Premium snake ladder emblem">
+  <defs>
+    <radialGradient id="bg5" cx="50%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#312E81"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg5)"/>
+
+  <g transform="translate(512 520)">
+    <circle r="328" fill="#0B1220" stroke="#F59E0B" stroke-width="20"/>
+    <circle r="276" fill="#F8FAFC"/>
+
+    <g transform="translate(-128 -132)">
+      <rect x="0" y="0" width="256" height="256" rx="34" fill="#111827"/>
+      <circle cx="64" cy="64" r="16" fill="#FFFFFF"/>
+      <circle cx="192" cy="64" r="16" fill="#FFFFFF"/>
+      <circle cx="64" cy="192" r="16" fill="#FFFFFF"/>
+      <circle cx="192" cy="192" r="16" fill="#FFFFFF"/>
+    </g>
+
+    <path d="M124 -68C72 -63 35 -29 28 13C20 61 48 93 96 123C152 158 170 207 148 252C122 304 64 327 1 317"
+          fill="none" stroke="#BE123C" stroke-width="34" stroke-linecap="round"/>
+    <circle cx="132" cy="-74" r="30" fill="#BE123C"/>
+    <circle cx="142" cy="-81" r="4" fill="#0B1220"/>
+    <circle cx="124" cy="-81" r="4" fill="#0B1220"/>
+
+    <g stroke="#B45309" stroke-width="20" stroke-linecap="round">
+      <path d="M-208 182L-88 -74"/>
+      <path d="M-136 214L-16 -42"/>
+    </g>
+    <g stroke="#FCD34D" stroke-width="10" stroke-linecap="round">
+      <path d="M-184 138L-64 170M-160 90L-40 122M-136 42L-16 74M-112 -6L8 26"/>
+    </g>
+  </g>
+
+  <text x="512" y="910" text-anchor="middle" font-family="Verdana, sans-serif" font-size="66" font-weight="700" fill="#F8FAFC">SNAKE LADDER PRO</text>
+</svg>

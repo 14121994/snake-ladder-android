@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Modern SL logo">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="snake3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E11D48"/>
+      <stop offset="100%" stop-color="#FB7185"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg3)"/>
+
+  <path d="M264 316C264 240 332 192 422 192H694V282H432C395 282 360 296 360 330C360 356 378 370 436 392L568 440C654 472 704 522 704 606C704 700 624 760 520 760H238V670H514C574 670 608 646 608 612C608 576 576 556 514 536L386 494C304 466 264 410 264 316Z" fill="#F8FAFC"/>
+
+  <g transform="translate(744 216)">
+    <path d="M-38 86L34 -78" stroke="#FBBF24" stroke-width="20" stroke-linecap="round"/>
+    <path d="M8 104L80 -60" stroke="#FBBF24" stroke-width="20" stroke-linecap="round"/>
+    <path d="M-26 56L46 86M-12 24L60 54M2 -8L74 22M16 -40L88 -10" stroke="#FDE68A" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <path d="M742 682C700 684 668 662 662 626C656 592 674 564 712 546C748 528 760 508 754 486C746 458 716 446 684 454" fill="none" stroke="url(#snake3)" stroke-width="30" stroke-linecap="round"/>
+  <circle cx="752" cy="684" r="26" fill="#E11D48"/>
+
+  <text x="512" y="910" text-anchor="middle" font-family="Verdana, sans-serif" font-size="64" font-weight="700" fill="#F8FAFC">SNAKE LADDER</text>
+</svg>

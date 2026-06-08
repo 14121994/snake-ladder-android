@@ -1,0 +1,5 @@
+# Snake & Ladder Preview Pack (12)
+
+All clips are 9 seconds, 720x1280, MP4.
+
+- 1. `preview_01_hero_race_preview.mp4`: Hero Race Preview\n- 2. `preview_02_dice_drama_cut.mp4`: Dice Drama Cut\n- 3. `preview_03_neon_night_board.mp4`: Neon Night Board\n- 4. `preview_04_royal_classic_theme.mp4`: Royal Classic Theme\n- 5. `preview_05_casual_family_fun.mp4`: Casual Family Fun\n- 6. `preview_06_vs_bot_showdown.mp4`: VS Bot Showdown\n- 7. `preview_07_lucky_streak_story.mp4`: Lucky Streak Story\n- 8. `preview_08_snake_attack_moment.mp4`: Snake Attack Moment\n- 9. `preview_09_minimal_premium_teaser.mp4`: Minimal Premium Teaser\n- 10. `preview_10_feature_highlight_reel.mp4`: Feature Highlight Reel\n- 11. `preview_11_journey_map_preview.mp4`: Journey Map Preview\n- 12. `preview_12_festival_celebration_cut.mp4`: Festival Celebration Cut\n
