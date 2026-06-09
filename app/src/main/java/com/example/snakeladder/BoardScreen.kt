@@ -48,7 +48,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -342,7 +341,7 @@ internal fun SnakeLadderScreen(
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val compactBoardUi = isLandscape || configuration.screenHeightDp <= 760
+    val compactBoardUi = isLandscape || configuration.screenHeightDp <= 840
     val effectiveCompactUi = compactBoardUi || compactMatchUiEnabled
     val feedback = remember(context) { GameFeedback(context) }
     val deviceHasVibrator = remember(context) { deviceHasVibrator(context) }
@@ -861,15 +860,17 @@ internal fun SnakeLadderScreen(
                     }
                 )
             }
-            BoardViewportControls(
-                zoom = boardViewportZoom,
-                onZoomOut = { updateBoardZoom(boardViewportZoom - 0.2f) },
-                onCenterTurn = { centerBoardOnCurrentTurn() },
-                onZoomIn = { updateBoardZoom(boardViewportZoom + 0.2f) },
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(10.dp)
-            )
+            if (isLandscape) {
+                BoardViewportControls(
+                    zoom = boardViewportZoom,
+                    onZoomOut = { updateBoardZoom(boardViewportZoom - 0.2f) },
+                    onCenterTurn = { centerBoardOnCurrentTurn() },
+                    onZoomIn = { updateBoardZoom(boardViewportZoom + 0.2f) },
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(10.dp)
+                )
+            }
         }
     }
 
@@ -1006,12 +1007,26 @@ internal fun SnakeLadderScreen(
                     .padding(if (effectiveCompactUi) 10.dp else 12.dp),
                 verticalArrangement = Arrangement.spacedBy(if (effectiveCompactUi) 7.dp else 8.dp)
             ) {
-                controlSection()
+                BoardTopStatusCard(
+                    state = state,
+                    isPaused = isPaused,
+                    isRolling = isRolling,
+                    isMoveAnimating = isMoveAnimating,
+                    compact = effectiveCompactUi
+                )
+                BoardViewportControls(
+                    zoom = boardViewportZoom,
+                    onZoomOut = { updateBoardZoom(boardViewportZoom - 0.2f) },
+                    onCenterTurn = { centerBoardOnCurrentTurn() },
+                    onZoomIn = { updateBoardZoom(boardViewportZoom + 0.2f) },
+                    modifier = Modifier.align(Alignment.Start)
+                )
                 boardSection(
                     Modifier
                         .weight(1f)
                         .fillMaxWidth()
                 )
+                controlSection()
             }
         }
 
@@ -1090,24 +1105,46 @@ internal fun SnakeLadderScreen(
         }
 
         if (showTopActionButtons) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = if (isLandscape) 12.dp else 18.dp, end = if (isLandscape) 12.dp else 18.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TopOverlayActionButton(
-                    icon = if (isPaused) TopOverlayIcon.RESUME else TopOverlayIcon.PAUSE,
-                    contentDescription = if (isPaused) "Resume" else "Pause",
-                    testTag = "pause_button",
-                    onClick = { isPaused = !isPaused }
-                )
-                TopOverlayActionButton(
-                    icon = TopOverlayIcon.SETTINGS,
-                    contentDescription = "Settings",
-                    testTag = "settings_button",
-                    onClick = { showSettingsDialog = true }
-                )
+            if (isLandscape) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 12.dp, end = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TopOverlayActionButton(
+                        icon = if (isPaused) TopOverlayIcon.RESUME else TopOverlayIcon.PAUSE,
+                        contentDescription = if (isPaused) "Resume" else "Pause",
+                        testTag = "pause_button",
+                        onClick = { isPaused = !isPaused }
+                    )
+                    TopOverlayActionButton(
+                        icon = TopOverlayIcon.SETTINGS,
+                        contentDescription = "Settings",
+                        testTag = "settings_button",
+                        onClick = { showSettingsDialog = true }
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 18.dp, end = 18.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TopOverlayActionButton(
+                        icon = if (isPaused) TopOverlayIcon.RESUME else TopOverlayIcon.PAUSE,
+                        contentDescription = if (isPaused) "Resume" else "Pause",
+                        testTag = "pause_button",
+                        onClick = { isPaused = !isPaused }
+                    )
+                    TopOverlayActionButton(
+                        icon = TopOverlayIcon.SETTINGS,
+                        contentDescription = "Settings",
+                        testTag = "settings_button",
+                        onClick = { showSettingsDialog = true }
+                    )
+                }
             }
         }
 
@@ -1925,12 +1962,8 @@ private fun SettingsTabPicker(
                         .testTag("settings_tab_${tab.name.lowercase()}"),
                     selected = selectedTab == tab,
                     onClick = { onSelectTab(tab) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color(0xFFF4F7FA),
-                        labelColor = Color(0xFF4F6071),
-                        selectedContainerColor = Color(0xFF1557A8),
-                        selectedLabelColor = Color.White
-                    ),
+                    colors = strongFilterChipColors(),
+                    border = strongFilterChipBorder(selected = selectedTab == tab),
                     label = {
                         Text(
                             text = tab.label,
@@ -2127,6 +2160,8 @@ private fun <T> SettingsEnumChips(
                         .testTag("${tagPrefix}_${label(value).lowercase().replace(' ', '_')}"),
                     selected = selected == value,
                     onClick = { onSelect(value) },
+                    colors = strongFilterChipColors(),
+                    border = strongFilterChipBorder(selected = selected == value),
                     label = { ChipLabel(label(value)) }
                 )
             }
@@ -2829,6 +2864,110 @@ private fun ProgressAlertDialog(
 }
 
 @Composable
+private fun BoardTopStatusCard(
+    state: GameState,
+    isPaused: Boolean,
+    isRolling: Boolean,
+    isMoveAnimating: Boolean,
+    compact: Boolean
+) {
+    val currentPlayer = state.players.getOrNull(state.currentPlayerIndex)
+    val winnerName = state.winnerIndex?.let { state.players.getOrNull(it)?.name }
+    val isBotTurn = state.botPlayerIndex == state.currentPlayerIndex && state.winnerIndex == null
+    val turnLabel = when {
+        winnerName != null -> "$winnerName wins"
+        isPaused -> "Paused"
+        isRolling && isBotTurn -> "Bot rolling"
+        isRolling -> "Rolling dice"
+        isMoveAnimating -> "Resolving move"
+        isBotTurn -> "Bot turn"
+        currentPlayer != null -> "${currentPlayer.name}'s turn"
+        else -> "Turn pending"
+    }
+    val status = when {
+        winnerName != null -> "Match complete"
+        isPaused -> "Resume to continue"
+        isRolling -> "Dice is rolling"
+        isMoveAnimating -> "Move resolving"
+        else -> state.statusMessage
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFFFFFBF1))
+            .border(1.dp, Color(0xFFE5D4B8), RoundedCornerShape(14.dp))
+            .padding(
+                start = if (compact) 9.dp else 10.dp,
+                top = if (compact) 8.dp else 9.dp,
+                end = 120.dp,
+                bottom = if (compact) 8.dp else 9.dp
+            )
+            .semantics {
+                contentDescription = "Board status. $turnLabel. $status"
+            }
+            .testTag("board_top_status_card")
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(if (compact) 5.dp else 6.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = turnLabel,
+                    fontSize = if (compact) 17.sp else 19.sp,
+                    lineHeight = if (compact) 19.sp else 21.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFF3E2723),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("board_top_turn_label")
+                )
+                currentPlayer?.let { player ->
+                    Text(
+                        text = "Cell ${player.position}",
+                        fontSize = if (compact) 10.sp else 11.sp,
+                        lineHeight = if (compact) 12.sp else 13.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF164E80),
+                        maxLines = 1,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(Color(0xFFEAF3FF))
+                            .border(1.dp, Color(0xFFB5CAE8), RoundedCornerShape(999.dp))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                            .testTag("board_top_current_cell")
+                    )
+                }
+            }
+            Text(
+                text = "${state.gameMode.displayName()} | ${state.matchMode.label} | ${state.difficulty.displayName()}",
+                fontSize = if (compact) 10.sp else 11.sp,
+                lineHeight = if (compact) 12.sp else 13.sp,
+                color = Color(0xFF6D5C52),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag("board_top_mode_label")
+            )
+            Text(
+                text = status,
+                fontSize = if (compact) 11.sp else 12.sp,
+                lineHeight = if (compact) 13.sp else 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF4E342E),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag("board_top_status_message")
+            )
+        }
+    }
+}
+
+@Composable
 private fun ControlCard(
     state: GameState,
     previewDice: Int,
@@ -2984,6 +3123,41 @@ private fun ControlCard(
 
             MatchModeStrip(state = state, compact = compact)
 
+            PowerUpFeedbackBanner(
+                event = state.matchEvents.lastOrNull(),
+                currentPlayerIndex = state.currentPlayerIndex,
+                botPlayerIndex = state.botPlayerIndex,
+                compact = compact
+            )
+
+            if (RuleSets.byId(state.ruleSetId).usesPowerUps) {
+                val occupiedCells = state.players.map { it.position }.toSet()
+                PowerUpInventoryPanel(
+                    inventory = currentInventory,
+                    armedPowerUps = state.armedPowerUps.filter { it.playerIndex == state.currentPlayerIndex }.map { it.type },
+                    activeTraps = state.activeTraps,
+                    trapPreviewCell = PowerUpRuleEngine.trapCellFor(
+                        state.players[state.currentPlayerIndex].position,
+                        occupiedCells
+                    ),
+                    recentPowerUpEvents = state.matchEvents
+                        .asReversed()
+                        .filter {
+                            it.powerUpUsed != null ||
+                                it.triggeredPowerUps.isNotEmpty() ||
+                                it.awardedPowerUps.isNotEmpty()
+                        }
+                        .take(2),
+                    isCardMode = isCardMode,
+                    botPlayerIndex = state.botPlayerIndex,
+                    enabled = playerCanUsePowerUp,
+                    disabledReason = powerUpUnavailableReason,
+                    compact = compact,
+                    onUsePowerUp = onUsePowerUp,
+                    onCancelArmedPowerUp = onCancelArmedPowerUp
+                )
+            }
+
             PlayerPositionStrip(
                 players = state.players,
                 currentPlayerIndex = state.currentPlayerIndex,
@@ -3014,40 +3188,6 @@ private fun ControlCard(
                     compact = compact
                 )
             }
-
-            if (RuleSets.byId(state.ruleSetId).usesPowerUps) {
-                val occupiedCells = state.players.map { it.position }.toSet()
-                PowerUpInventoryPanel(
-                    inventory = currentInventory,
-                    armedPowerUps = state.armedPowerUps.filter { it.playerIndex == state.currentPlayerIndex }.map { it.type },
-                    activeTraps = state.activeTraps,
-                    trapPreviewCell = PowerUpRuleEngine.trapCellFor(
-                        state.players[state.currentPlayerIndex].position,
-                        occupiedCells
-                    ),
-                    recentPowerUpEvents = state.matchEvents
-                        .asReversed()
-                        .filter {
-                            it.powerUpUsed != null ||
-                                it.triggeredPowerUps.isNotEmpty() ||
-                                it.awardedPowerUps.isNotEmpty()
-                        }
-                        .take(2),
-                    isCardMode = isCardMode,
-                    botPlayerIndex = state.botPlayerIndex,
-                    enabled = playerCanUsePowerUp,
-                    disabledReason = powerUpUnavailableReason,
-                    compact = compact,
-                    onUsePowerUp = onUsePowerUp,
-                    onCancelArmedPowerUp = onCancelArmedPowerUp
-                )
-            }
-            PowerUpFeedbackBanner(
-                event = state.matchEvents.lastOrNull(),
-                currentPlayerIndex = state.currentPlayerIndex,
-                botPlayerIndex = state.botPlayerIndex,
-                compact = compact
-            )
 
             Box(
                 modifier = Modifier

@@ -153,6 +153,8 @@ private fun StatusFilterRow(
                 FilterChip(
                     selected = selectedStatus == status,
                     onClick = { onSelectStatus(status) },
+                    colors = strongFilterChipColors(),
+                    border = strongFilterChipBorder(selected = selectedStatus == status),
                     label = {
                         Text(
                             text = label,
@@ -200,6 +202,8 @@ private fun CategoryFilter(
                 FilterChip(
                     selected = selectedCategory == category,
                     onClick = { onSelectCategory(category) },
+                    colors = strongFilterChipColors(),
+                    border = strongFilterChipBorder(selected = selectedCategory == category),
                     label = {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(

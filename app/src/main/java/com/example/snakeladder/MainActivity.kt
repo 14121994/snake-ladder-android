@@ -48,6 +48,7 @@ class MainActivity : ComponentActivity() {
                     var activeSaveId by rememberSaveable { mutableStateOf<String?>(null) }
                     var autoSaveId by rememberSaveable { mutableStateOf<String?>(null) }
                     var lastRecordedWinSignal by rememberSaveable { mutableIntStateOf(-1) }
+                    var newGameGuideDismissed by rememberSaveable { mutableStateOf(false) }
                     var savedGames by remember { mutableStateOf(emptyList<SavedGameSnapshot>()) }
                     var playerProfile by remember { mutableStateOf(PlayerProfile()) }
                     var playerSetupNames by rememberSaveable {
@@ -95,6 +96,7 @@ class MainActivity : ComponentActivity() {
                         selectedMatchMode = launchSetup.matchMode
                         selectedBoardLayoutId = launchSetup.boardLayoutId
                         selectedBotPersonality = launchSetup.botPersonality
+                        newGameGuideDismissed = launchSetup.newGameGuideDismissed
                         launchSetupLoaded = true
                         savedGames = SavedGameStore.loadAll(appContext)
                         val loadedProfile = PlayerProfileStore.load(appContext)
@@ -108,7 +110,8 @@ class MainActivity : ComponentActivity() {
                         selectedMode,
                         selectedMatchMode,
                         selectedBoardLayoutId,
-                        selectedBotPersonality
+                        selectedBotPersonality,
+                        newGameGuideDismissed
                     ) {
                         if (launchSetupLoaded) {
                             LaunchSetupStore.save(
@@ -118,7 +121,8 @@ class MainActivity : ComponentActivity() {
                                     mode = selectedMode,
                                     matchMode = selectedMatchMode,
                                     boardLayoutId = selectedBoardLayoutId,
-                                    botPersonality = selectedBotPersonality
+                                    botPersonality = selectedBotPersonality,
+                                    newGameGuideDismissed = newGameGuideDismissed
                                 )
                             )
                         }
@@ -167,6 +171,7 @@ class MainActivity : ComponentActivity() {
                             playerSetups = playerSetups,
                             dailyChallenge = dailyChallenge,
                             savedGames = savedGames,
+                            showNewGameGuide = !newGameGuideDismissed,
                             onRefreshSavedGames = {
                                 savedGames = SavedGameStore.loadAll(appContext)
                             },
@@ -331,6 +336,9 @@ class MainActivity : ComponentActivity() {
                                     PlayerProfileStore.save(appContext, result.profile)
                                 }
                                 result.message
+                            },
+                            onDismissNewGameGuide = {
+                                newGameGuideDismissed = true
                             },
                             onStart = { difficulty ->
                                 activeSaveId = null

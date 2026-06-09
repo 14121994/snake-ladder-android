@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +32,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -410,11 +413,15 @@ internal fun BoardThemeOptionCard(
         modifier = taggedModifier
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
+            .semantics { stateDescription = if (selected) "Selected" else "Not selected" }
             .border(
-                width = if (selected) 2.dp else 1.dp,
-                color = if (selected) Color(0xFF1565C0) else Color(0xFFD4C7B7),
+                width = if (selected) 3.dp else 1.dp,
+                color = if (selected) strongSelectedCardBorder else lightUnselectedCardBorder,
                 shape = RoundedCornerShape(12.dp)
-            )
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) strongSelectedCardContainer else lightUnselectedCardContainer
+        )
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -430,13 +437,14 @@ internal fun BoardThemeOptionCard(
             )
             Text(
                 text = boardThemeDisplayLabel(theme),
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.bodyMedium
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (selected) Color(0xFF133F73) else lightUnselectedCardLabel
             )
             Text(
                 text = boardThemeSupportLabel(theme),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6D6259),
+                color = if (selected) Color(0xFF24435F) else lightUnselectedCardSupport,
                 lineHeight = 14.sp
             )
         }
@@ -454,11 +462,15 @@ internal fun BoardLayoutSelectionCard(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
+            .semantics { stateDescription = if (selected) "Selected" else "Not selected" }
             .border(
-                width = if (selected) 2.dp else 1.dp,
-                color = if (selected) Color(0xFF1565C0) else Color(0xFFD4C7B7),
+                width = if (selected) 3.dp else 1.dp,
+                color = if (selected) strongSelectedCardBorder else lightUnselectedCardBorder,
                 shape = RoundedCornerShape(12.dp)
-            )
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) strongSelectedCardContainer else lightUnselectedCardContainer
+        )
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -473,16 +485,16 @@ internal fun BoardLayoutSelectionCard(
             )
             Text(
                 text = board.label,
-                fontWeight = FontWeight.Bold,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF4E342E),
+                color = if (selected) Color(0xFF133F73) else lightUnselectedCardLabel,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = boardLayoutSupportLabel(board),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6D6259),
+                color = if (selected) Color(0xFF24435F) else lightUnselectedCardSupport,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 15.sp
@@ -490,8 +502,8 @@ internal fun BoardLayoutSelectionCard(
             Text(
                 text = boardLayoutCompactStatsLabel(board),
                 style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF8A3D00),
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (selected) Color(0xFF8A3D00) else lightUnselectedCardSupport,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -510,11 +522,15 @@ internal fun DiceSkinOptionCard(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
+            .semantics { stateDescription = if (selected) "Selected" else "Not selected" }
             .border(
-                width = if (selected) 2.dp else 1.dp,
-                color = if (selected) Color(0xFF1565C0) else Color(0xFFD4C7B7),
+                width = if (selected) 3.dp else 1.dp,
+                color = if (selected) strongSelectedCardBorder else lightUnselectedCardBorder,
                 shape = RoundedCornerShape(12.dp)
-            )
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) strongSelectedCardContainer else lightUnselectedCardContainer
+        )
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -525,8 +541,12 @@ internal fun DiceSkinOptionCard(
                     .fillMaxWidth()
                     .height(82.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF8FBFF))
-                    .border(1.dp, Color(0xFFD4E0EE), RoundedCornerShape(12.dp)),
+                    .background(if (selected) Color(0xFFF8FBFF) else lightUnselectedMarkerContainer)
+                    .border(
+                        1.dp,
+                        if (selected) Color(0xFFD4E0EE) else lightUnselectedCardBorder,
+                        RoundedCornerShape(12.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
@@ -562,14 +582,14 @@ internal fun DiceSkinOptionCard(
             }
             Text(
                 text = skin.label,
-                fontWeight = FontWeight.Bold,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF4E342E)
+                color = if (selected) Color(0xFF133F73) else lightUnselectedCardLabel
             )
             Text(
                 text = diceSkinSupportLabel(skin),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6D6259)
+                color = if (selected) Color(0xFF24435F) else lightUnselectedCardSupport
             )
         }
     }
@@ -586,11 +606,15 @@ internal fun TokenTrailOptionCard(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
+            .semantics { stateDescription = if (selected) "Selected" else "Not selected" }
             .border(
-                width = if (selected) 2.dp else 1.dp,
-                color = if (selected) Color(0xFF1565C0) else Color(0xFFD4C7B7),
+                width = if (selected) 3.dp else 1.dp,
+                color = if (selected) strongSelectedCardBorder else lightUnselectedCardBorder,
                 shape = RoundedCornerShape(12.dp)
-            )
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) strongSelectedCardContainer else lightUnselectedCardContainer
+        )
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -601,8 +625,12 @@ internal fun TokenTrailOptionCard(
                     .fillMaxWidth()
                     .height(72.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF8FBFF))
-                    .border(1.dp, Color(0xFFD4E0EE), RoundedCornerShape(12.dp))
+                    .background(if (selected) Color(0xFFF8FBFF) else lightUnselectedMarkerContainer)
+                    .border(
+                        1.dp,
+                        if (selected) Color(0xFFD4E0EE) else lightUnselectedCardBorder,
+                        RoundedCornerShape(12.dp)
+                    )
                     .padding(horizontal = 10.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -648,14 +676,14 @@ internal fun TokenTrailOptionCard(
             }
             Text(
                 text = option.label,
-                fontWeight = FontWeight.Bold,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF4E342E)
+                color = if (selected) Color(0xFF133F73) else lightUnselectedCardLabel
             )
             Text(
                 text = tokenTrailSupportLabel(option),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6D6259)
+                color = if (selected) Color(0xFF24435F) else lightUnselectedCardSupport
             )
         }
     }

@@ -219,6 +219,8 @@ private fun CampaignFilterRow(
                 FilterChip(
                     selected = selectedFilter == filter,
                     onClick = { onSelectFilter(filter) },
+                    colors = strongFilterChipColors(),
+                    border = strongFilterChipBorder(selected = selectedFilter == filter),
                     label = {
                         Text(
                             text = filter.label,

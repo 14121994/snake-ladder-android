@@ -135,6 +135,8 @@ private fun ProfileTabs(
                             .testTag("profile_tab_${tab.name.lowercase()}"),
                         selected = selectedTab == tab,
                         onClick = { onSelectTab(tab) },
+                        colors = strongFilterChipColors(),
+                        border = strongFilterChipBorder(selected = selectedTab == tab),
                         label = {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -143,7 +145,7 @@ private fun ProfileTabs(
                             ) {
                                 MiniBadge(
                                     text = tab.marker,
-                                    tint = if (selectedTab == tab) Color(0xFF0D47A1) else Color(0xFF758196)
+                                    tint = if (selectedTab == tab) Color.White else Color(0xFF758196)
                                 )
                                 Spacer(modifier = Modifier.width(5.dp))
                                 Text(

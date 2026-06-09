@@ -53,6 +53,10 @@ The main drag is presentation density. Many controls are packed into large modal
 37. Exit and Restart confirmation dialog shell, including consistent scrim, top-right close action, safe-area padding, and above-navigation action placement.
 38. Launcher local-save status, saved-state copy, enabled Load Saved/Resume Latest state, and recreation-based resume regression.
 39. Adaptive launcher landscape/tablet layout with a current-setup rail, wide two-row action grid, and readable dense launch action labels.
+40. New Game first-time guided setup tutorial, including persisted dismissal, Hide tips, Setup/Mode/Board/Review tutorial stepping, and Start Match dismissal.
+41. Selected chip/card styling sweep across New Game, Settings, Campaign, Progress, Store, Pro Features, and visual/setup selectors.
+42. Unselected chip/card styling sweep across New Game step chips, FilterChip families, setup selector cards, avatar tiles, and visual selector cards.
+43. Portrait board-first match layout with a compact top status card, readable board top row above the fold, and zoom controls moved outside the board surface.
 
 ## Evidence Captures
 
@@ -204,6 +208,19 @@ Screenshots and UI XML captures were saved under `/private/tmp/` during live tes
 - `/private/tmp/snake_save_status_resumed_board.xml`
 - `/private/tmp/snake_adaptive_launch_landscape.png`
 - `/private/tmp/snake_adaptive_launch_landscape.xml`
+- `/private/tmp/snake_new_game_guide_launch.xml`
+- `/private/tmp/snake_new_game_guide.png`
+- `/private/tmp/snake_new_game_guide.xml`
+- `/private/tmp/snake_selected_chips_newgame.png`
+- `/private/tmp/snake_selected_chips_newgame.xml`
+- `/private/tmp/snake_selected_chips_settings_visual.png`
+- `/private/tmp/snake_selected_chips_settings_visual.xml`
+- `/private/tmp/snake_unselected_chips_newgame.png`
+- `/private/tmp/snake_unselected_chips_newgame.xml`
+- `/private/tmp/snake_unselected_chips_settings_visual.png`
+- `/private/tmp/snake_unselected_chips_settings_visual.xml`
+- `/private/tmp/snake_board_above_fold_final.png`
+- `/private/tmp/snake_board_above_fold_final.xml`
 
 ## Latest Verification
 
@@ -308,6 +325,69 @@ Screenshots and UI XML captures were saved under `/private/tmp/` during live tes
   - METHOD coverage: 96.57% (563/583)
   - CLASS coverage: 100.00% (77/77)
 
+2026-06-09 implementation pass:
+
+- Fully implemented the New Game guided setup for casual players. First-time New Game now shows a guide card with Back, Setup, Next/Finish, and Hide tips controls; Next walks through Setup, Mode, Board, and Review while scrolling to the real sections.
+- Persisted guide dismissal in `LaunchSetupStore`. Hide tips, Finish, and Start Match hide the guide for experienced players and keep it hidden across app relaunch.
+- Added focused connected UI coverage for the first-time guide stepper and Hide tips path, plus launch setup persistence coverage for `newGameGuideDismissed`.
+- `./gradlew :app:compileDebugKotlin :app:compileDebugAndroidTestKotlin --console=plain` passed.
+- `./gradlew :app:connectedDebugAndroidTest --console=plain -Pandroid.testInstrumentationRunnerArguments.class=com.example.snakeladder.SnakeLadderUiTest#newGameDialog_firstTimeGuideWalksThroughSetupSectionsAndFinishes,com.example.snakeladder.SnakeLadderUiTest#newGameDialog_hideTipsDisablesFirstTimeGuideForSession,com.example.snakeladder.LaunchSetupStoreInstrumentedTest` passed 4 connected tests on RMX3998.
+- Manual device pass on RMX3998 forced `new_game_guide_dismissed=false`, opened New Game, captured `/private/tmp/snake_new_game_guide.png` and `/private/tmp/snake_new_game_guide.xml`, and verified guide copy, button fit, footer visibility, and accessibility content description.
+- `./gradlew :app:checkDebugCoverage --console=plain` passed with 108 connected tests and these metrics:
+  - INSTRUCTION coverage: 97.50% (21057/21596)
+  - LINE coverage: 99.20% (3096/3121)
+  - BRANCH coverage: 90.63% (1199/1323)
+  - METHOD coverage: 96.58% (564/584)
+  - CLASS coverage: 100.00% (77/77)
+
+2026-06-09 selected-chip implementation pass:
+
+- Fully implemented the selected chip/card contrast sweep. `FilterChip` families now share the same strong active container, label, and border treatment, while setup and visual selector cards now use a stronger selected border, selected fill, and selected accessibility state.
+- Standardized unselected `FilterChip` containers and borders while keeping the broader non-chip/card unselected-surface cleanup pending.
+- Applied the sweep to New Game player chips, segmented setup controls, match mode/bot/board cards, Settings tabs and enum chips, Campaign filters, Progress tabs, Store tabs, Pro Feature filters, and board/dice/trail visual selector cards.
+- Added focused connected UI coverage for remaining setup selectors and Settings selector state.
+- `./gradlew :app:compileDebugKotlin :app:compileDebugAndroidTestKotlin --console=plain` passed.
+- `./gradlew :app:connectedDebugAndroidTest --console=plain -Pandroid.testInstrumentationRunnerArguments.class=com.example.snakeladder.SnakeLadderUiTest#newGameDialog_remainingSetupSelectorsExposeSelectedState,com.example.snakeladder.SnakeLadderUiTest#settingsDialog_remainingChipSelectorsExposeSelectedState` passed 2 connected tests on RMX3998.
+- Manual device pass on RMX3998 captured `/private/tmp/snake_selected_chips_newgame.png`, `/private/tmp/snake_selected_chips_newgame.xml`, `/private/tmp/snake_selected_chips_settings_visual.png`, and `/private/tmp/snake_selected_chips_settings_visual.xml`; New Game and Settings selected tabs/chips/cards were visually checked for contrast, fit, and state clarity.
+- `./gradlew :app:checkDebugCoverage --console=plain` passed with 110 connected tests and these metrics:
+  - INSTRUCTION coverage: 97.51% (21371/21916)
+  - LINE coverage: 99.21% (3131/3156)
+  - BRANCH coverage: 90.79% (1223/1347)
+  - METHOD coverage: 96.15% (575/598)
+  - CLASS coverage: 100.00% (78/78)
+
+2026-06-09 unselected-chip implementation pass:
+
+- Fully implemented the unselected chip/card visual-weight sweep. Unselected `FilterChip` groups now use transparent containers, lighter borders, and softer inactive labels; card-like selectors now use transparent inactive cards, softer borders, lighter labels, and reduced inactive font weight.
+- Applied the sweep to New Game step chips, player-count chips, segmented setup controls, player avatar tiles, match mode/bot/board setup cards, Settings tabs and enum chips, Campaign filters, Progress tabs, Store tabs, Pro Feature filters, and board/dice/trail visual selector cards.
+- Extended focused connected UI tests so setup and Settings selectors assert both selected and not-selected states before changing choices.
+- `./gradlew :app:compileDebugKotlin :app:compileDebugAndroidTestKotlin --console=plain` passed.
+- `./gradlew :app:connectedDebugAndroidTest --console=plain -Pandroid.testInstrumentationRunnerArguments.class=com.example.snakeladder.SnakeLadderUiTest#newGameDialog_remainingSetupSelectorsExposeSelectedState,com.example.snakeladder.SnakeLadderUiTest#settingsDialog_remainingChipSelectorsExposeSelectedState` passed 2 connected tests on RMX3998.
+- Manual device pass on RMX3998 captured `/private/tmp/snake_unselected_chips_newgame.png`, `/private/tmp/snake_unselected_chips_newgame.xml`, `/private/tmp/snake_unselected_chips_settings_visual.png`, and `/private/tmp/snake_unselected_chips_settings_visual.xml`; New Game and Settings inactive chips/cards were visually checked for lighter weight, text fit, and selected-vs-unselected hierarchy.
+- `./gradlew :app:checkDebugCoverage --console=plain` passed with 110 connected tests and these metrics:
+  - INSTRUCTION coverage: 97.55% (21484/22023)
+  - LINE coverage: 99.21% (3143/3168)
+  - BRANCH coverage: 91.03% (1259/1383)
+  - METHOD coverage: 96.68% (583/603)
+  - CLASS coverage: 100.00% (78/78)
+
+2026-06-09 board-above-fold implementation pass:
+
+- Fully implemented the portrait board-above-fold layout. Portrait matches now start with a compact turn/status card, then board zoom controls, then the board viewport before the detailed control card; landscape keeps its existing split layout.
+- Moved portrait Pause and Settings into a side-by-side top action row and moved portrait zoom controls outside the board surface so the top board row remains visible and readable.
+- Added focused connected UI coverage for the portrait board start position through `boardScreen_boardTopVisibleAboveFoldInPortrait`.
+- `./gradlew :app:compileDebugKotlin :app:compileDebugAndroidTestKotlin --console=plain` passed.
+- `./gradlew :app:connectedDebugAndroidTest --console=plain -Pandroid.testInstrumentationRunnerArguments.class=com.example.snakeladder.SnakeLadderUiTest#boardScreen_boardTopVisibleAboveFoldInPortrait,com.example.snakeladder.SnakeLadderUiTest#boardScreen_controlsVisibleInPortrait` passed 2 connected tests on RMX3998.
+- Manual device pass on RMX3998 captured `/private/tmp/snake_board_above_fold_final.png` and `/private/tmp/snake_board_above_fold_final.xml`; XML bounds showed the viewport at `[30,577][1050,1283]` and the board at `[211,601][869,1259]`, above the first third of the 2400px portrait screen.
+- Raised the phone portrait compact-match breakpoint, moved power-up feedback/inventory ahead of lower match details, and added explicit route endpoint semantics actions so party power-up and route inspection regressions remain stable in the new board-first layout.
+- `./gradlew :app:connectedDebugAndroidTest --console=plain -Pandroid.testInstrumentationRunnerArguments.class=com.example.snakeladder.SnakeLadderUiTest#boardScreen_partyRulesShowsPowerUpPanel,com.example.snakeladder.SnakeLadderUiTest#boardScreen_botPowerUpFeedbackExplainsChoiceReason,com.example.snakeladder.SnakeLadderUiTest#boardScreen_routeEndpointTapsShowSnakeAndLadderDetails` passed 3 connected tests on RMX3998.
+- `./gradlew :app:checkDebugCoverage --console=plain` passed with 111 connected tests and these metrics:
+  - INSTRUCTION coverage: 97.55% (21484/22023)
+  - LINE coverage: 99.21% (3143/3168)
+  - BRANCH coverage: 91.03% (1259/1383)
+  - METHOD coverage: 96.68% (583/603)
+  - CLASS coverage: 100.00% (78/78)
+
 ## Player Feedback
 
 The board game itself feels familiar and approachable. Cell numbering is generally legible, snake and ladder paths are visible, and the token states are understandable. The party mode with power-ups is the most interesting advanced layer because it adds decisions without abandoning Snake & Ladder.
@@ -318,9 +398,9 @@ The launch screen now reads better in the tested landscape/tablet-style viewport
 
 Status note: when a UI pointer is reviewed during an implementation pass, it is tagged as `Fully implemented`, `Partially implemented`, or `Not implemented`. Untagged items in this section were not scanned in that pass.
 
-1. [Partially implemented] Make selected chips more visually distinct across remaining chip groups. New Game step chips now use a strong active state; other chip families still need the same sweep.
-2. [Partially implemented] Make unselected chips less heavy across remaining chip groups. New Game step chips now use lighter unselected styling; other chip families still need the same sweep.
-3. [Partially implemented] Keep the board top visible above the fold.
+1. [Fully implemented] Make selected chips more visually distinct across remaining chip groups. New Game step chips, player-count chips, segmented setup controls, Settings tabs/enum chips, Campaign filters, Progress tabs, Store tabs, Pro Feature filters, and setup/visual card selectors now use a strong selected chip or selected-card treatment.
+2. [Fully implemented] Make unselected chips less heavy across remaining chip groups. New Game step chips, player-count chips, segmented setup controls, Settings tabs/enum chips, Campaign filters, Progress tabs, Store tabs, Pro Feature filters, setup cards, avatar tiles, and visual selector cards now use lighter unselected styling.
+3. [Fully implemented] Keep the board top visible above the fold. Portrait match layout now places a compact turn/status card first, keeps zoom controls above the board instead of covering cells, shows the board viewport before detailed controls, and is covered by a focused device UI test plus RMX3998 screenshot/XML evidence.
 4. [Partially implemented] Add cooldown/used styling to consumed power-ups.
 5. [Partially implemented] Improve dialog scrim opacity consistency. Exit and Restart confirmations now share the same custom in-match scrim; remaining Material alert/dialog surfaces still need the same sweep.
 6. [Partially implemented] Use snackbar or toast placement that is visible above nav bar.
@@ -330,16 +410,16 @@ Status note: when a UI pointer is reviewed during an implementation pass, it is 
 10. [Partially implemented] Add tablet layout breakpoints for board and controls. The launcher now uses a 700dp breakpoint with tested rail/wide action behavior; board and in-match controls still need tablet-specific breakpoints.
 11. Avoid putting cards inside card-heavy modal stacks.
 12. Improve contrast of gray disabled text on purple surfaces.
-13. [Partially implemented] Make all tappable surfaces meet a consistent visual style. Exit and Restart confirmation actions now share one destructive-confirmation layout, and launcher wide actions now share readable dense button treatment; broader button/chip styling still needs a full sweep.
-14. [Partially implemented] Add accessibility labels for non-text icon states.
+13. [Partially implemented] Make all tappable surfaces meet a consistent visual style. Exit and Restart confirmation actions now share one destructive-confirmation layout, launcher wide actions now share readable dense button treatment, and chip/card selector selected and unselected states now share a consistent treatment; broader non-selector button styling still needs a full sweep.
+14. [Partially implemented] Add accessibility labels for non-text icon states. The New Game setup guide card exposes a content description and step state, setup/visual selector cards expose selected/not-selected state, and board route endpoints now expose explicit highlight semantics actions; other non-text icon states still need a broader sweep.
 15. [Partially implemented] Verify dynamic font scaling at large accessibility sizes. The landscape launcher action labels and setup rail were manually checked after dense-label tuning; broader large-font validation remains pending.
-16. [Partially implemented] Add visual regression checks for truncation-prone labels. Exit/Restart confirmation shell tests, local-save status tests, and adaptive launcher landscape/tablet tests now assert key text/controls; broader screenshot-level truncation coverage is still pending.
+16. [Partially implemented] Add visual regression checks for truncation-prone labels. Exit/Restart confirmation shell tests, local-save status tests, adaptive launcher landscape/tablet tests, New Game setup guide tests, and selected/unselected selector-state tests now assert key text/controls; broader screenshot-level truncation coverage is still pending.
 
 ## UX Improvement Points
 
 Status note: when a UX pointer is reviewed during an implementation pass, it is tagged as `Fully implemented`, `Partially implemented`, or `Not implemented`. Untagged items in this section were not scanned in that pass.
 
-1. [Partially implemented] Use a guided setup for casual players. New Game now has tappable Setup, Mode, Board, and Review section navigation; a full first-time tutorial is still pending.
+1. [Fully implemented] Use a guided setup for casual players. New Game now has tappable Setup, Mode, Board, and Review section navigation plus a first-time guide card that steps through the real sections, supports Back/Next/Finish, exposes accessibility state, and persists dismissal through Hide tips or Start Match.
 2. [Partially implemented] Add a daily completion celebration.
 3. [Partially implemented] Add story flavor to campaign nodes.
 4. Offer starter unlocks early.
@@ -375,9 +455,9 @@ Status note: when a UX pointer is reviewed during an implementation pass, it is 
 34. [Partially implemented] Support family/pass-and-play mode with clearer handoff.
 35. Add turn privacy option for pass-and-play devices.
 36. Make current player announcement large but brief.
-37. Add tutorial tips that disappear after first use.
-38. Let experienced players disable tips.
-39. [Partially implemented] Add UX tests for every top-level launch flow. Added New Game step-strip instrumentation coverage, Exit/Restart confirmation shell coverage, and adaptive launcher landscape/tablet coverage.
+37. [Partially implemented] Add tutorial tips that disappear after first use. The New Game first-time setup guide now disappears after Finish, Hide tips, or Start Match and persists that dismissal; broader in-match tips remain pending.
+38. [Partially implemented] Let experienced players disable tips. New Game now has a persistent Hide tips action for the setup guide; broader app-wide tip preferences remain pending.
+39. [Partially implemented] Add UX tests for every top-level launch flow. Added New Game step-strip, first-time guide, and selector selected/unselected-state instrumentation coverage, Exit/Restart confirmation shell coverage, and adaptive launcher landscape/tablet coverage.
 40. [Partially implemented] Add end-to-end tests for save, load, exit, and resume. Exit confirmation behavior has focused UI coverage, launch setup persistence has invalid/fallback coverage, and persisted Resume Latest after activity recreation is now covered; full save-exit-load-resume E2E remains pending.
 
 ## Highest Priority Fixes

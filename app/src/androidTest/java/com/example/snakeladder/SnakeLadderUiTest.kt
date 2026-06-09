@@ -22,8 +22,12 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
@@ -46,8 +50,10 @@ class SnakeLadderUiTest {
         screenHeightDp: Int? = null,
         playerProfile: PlayerProfile = PlayerProfile(),
         savedGames: List<SavedGameSnapshot> = emptyList(),
+        showNewGameGuide: Boolean = false,
         onLoadSavedGame: (SavedGameSnapshot) -> Unit = {},
         onDeleteSavedGame: (SavedGameSnapshot) -> Unit = {},
+        onDismissNewGameGuide: () -> Unit = {},
         onEquipProfileItem: (String) -> String = { "Profile equipment unavailable." },
         onPurchaseStoreItem: (String) -> String = { "Store unavailable." },
         onExportProfile: () -> String = { "" },
@@ -77,6 +83,7 @@ class SnakeLadderUiTest {
                         playerProfile = playerProfile,
                         playerSetups = playerSetups.value,
                         savedGames = savedGames,
+                        showNewGameGuide = showNewGameGuide,
                         onRefreshSavedGames = {},
                         onSelectPlayers = { selectedPlayers.value = it },
                         onSelectMode = { mode ->
@@ -111,6 +118,7 @@ class SnakeLadderUiTest {
                         onShareProfile = onShareProfile,
                         onEquipProfileItem = onEquipProfileItem,
                         onPurchaseStoreItem = onPurchaseStoreItem,
+                        onDismissNewGameGuide = onDismissNewGameGuide,
                         onStart = onStart
                     )
                 }
@@ -367,6 +375,63 @@ class SnakeLadderUiTest {
     }
 
     @Test
+    fun newGameDialog_firstTimeGuideWalksThroughSetupSectionsAndFinishes() {
+        var guideDismissed = false
+        setLaunchContent(
+            showNewGameGuide = true,
+            onDismissNewGameGuide = { guideDismissed = true }
+        )
+
+        composeRule.onNodeWithTag("new_game_button").performClick()
+
+        composeRule.onNodeWithTag("new_game_setup_guide").assertIsDisplayed()
+        composeRule.onNodeWithTag("new_game_setup_guide_step_label")
+            .assertTextEquals("1 of 4: Quick setup")
+        composeRule.onNodeWithTag("new_game_setup_guide_back_button").assertIsNotEnabled()
+
+        composeRule.onNodeWithTag("new_game_setup_guide_next_button").performClick()
+        composeRule.mainClock.advanceTimeBy(1_000)
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("match_mode_picker").assertIsDisplayed()
+        composeRule.onNodeWithTag("new_game_setup_guide_step_label")
+            .assertTextEquals("2 of 4: Match mode")
+
+        composeRule.onNodeWithTag("new_game_setup_guide_next_button").performClick()
+        composeRule.mainClock.advanceTimeBy(1_000)
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("board_layout_picker").assertIsDisplayed()
+        composeRule.onNodeWithTag("new_game_setup_guide_step_label")
+            .assertTextEquals("3 of 4: Board layout")
+
+        composeRule.onNodeWithTag("new_game_setup_guide_next_button").performClick()
+        composeRule.mainClock.advanceTimeBy(1_000)
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("advanced_setup_toggle").assertIsDisplayed()
+        composeRule.onNodeWithTag("new_game_setup_guide_step_label")
+            .assertTextEquals("4 of 4: Review and start")
+
+        composeRule.onNodeWithTag("new_game_setup_guide_next_button").performClick()
+
+        composeRule.onAllNodesWithTag("new_game_setup_guide").assertCountEquals(0)
+        assertEquals(true, guideDismissed)
+    }
+
+    @Test
+    fun newGameDialog_hideTipsDisablesFirstTimeGuideForSession() {
+        var guideDismissed = false
+        setLaunchContent(
+            showNewGameGuide = true,
+            onDismissNewGameGuide = { guideDismissed = true }
+        )
+
+        composeRule.onNodeWithTag("new_game_button").performClick()
+        composeRule.onNodeWithTag("new_game_setup_guide_hide_button").performClick()
+
+        composeRule.onAllNodesWithTag("new_game_setup_guide").assertCountEquals(0)
+        assertEquals(true, guideDismissed)
+    }
+
+    @Test
     fun newGameDialog_vsBotShowsBotPersonalitySelector() {
         setLaunchContent()
 
@@ -407,6 +472,46 @@ class SnakeLadderUiTest {
             .config
             .getOrElseNullable(SemanticsProperties.StateDescription) { null }
         assertEquals("Selected", hardState)
+    }
+
+    @Test
+    fun newGameDialog_remainingSetupSelectorsExposeSelectedState() {
+        setLaunchContent()
+
+        composeRule.onNodeWithTag("new_game_button").performClick()
+
+        composeRule.onNodeWithTag("new_game_players_2_chip").assertIsSelected()
+        composeRule.onNodeWithTag("new_game_players_4_chip").performClick()
+        composeRule.onNodeWithTag("new_game_players_4_chip").assertIsSelected()
+        composeRule.onNodeWithTag("new_game_players_2_chip").assertIsNotSelected()
+
+        composeRule.onNodeWithTag("match_mode_party_rules").performScrollTo()
+        val initialPartyModeState = composeRule.onNodeWithTag("match_mode_party_rules", useUnmergedTree = true)
+            .fetchSemanticsNode("Party mode card missing")
+            .config
+            .getOrElseNullable(SemanticsProperties.StateDescription) { null }
+        assertEquals("Not selected", initialPartyModeState)
+
+        composeRule.onNodeWithTag("match_mode_party_rules").performClick()
+        val partyModeState = composeRule.onNodeWithTag("match_mode_party_rules", useUnmergedTree = true)
+            .fetchSemanticsNode("Party mode card missing")
+            .config
+            .getOrElseNullable(SemanticsProperties.StateDescription) { null }
+        assertEquals("Selected", partyModeState)
+
+        composeRule.onNodeWithTag("board_layout_pro_chaos").performScrollTo()
+        val initialProChaosState = composeRule.onNodeWithTag("board_layout_pro_chaos", useUnmergedTree = true)
+            .fetchSemanticsNode("Pro Chaos board card missing")
+            .config
+            .getOrElseNullable(SemanticsProperties.StateDescription) { null }
+        assertEquals("Not selected", initialProChaosState)
+
+        composeRule.onNodeWithTag("board_layout_pro_chaos").performClick()
+        val proChaosState = composeRule.onNodeWithTag("board_layout_pro_chaos", useUnmergedTree = true)
+            .fetchSemanticsNode("Pro Chaos board card missing")
+            .config
+            .getOrElseNullable(SemanticsProperties.StateDescription) { null }
+        assertEquals("Selected", proChaosState)
     }
 
     @Test
@@ -1237,6 +1342,25 @@ class SnakeLadderUiTest {
     }
 
     @Test
+    fun boardScreen_boardTopVisibleAboveFoldInPortrait() {
+        setBoardContent(Configuration.ORIENTATION_PORTRAIT)
+
+        composeRule.onNodeWithTag("board_top_status_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("board_top_turn_label").assertTextEquals("Player 1's turn")
+        composeRule.onNodeWithTag("board_viewport").assertIsDisplayed()
+        composeRule.onNodeWithTag("dice_badge").assertIsDisplayed()
+
+        val rootBounds = composeRule.onRoot().fetchSemanticsNode("Root missing").boundsInRoot
+        val boardBounds = composeRule.onNodeWithTag("board_viewport")
+            .fetchSemanticsNode("Board viewport missing")
+            .boundsInRoot
+        assertTrue(
+            "Board viewport should start above the first third of the portrait screen.",
+            boardBounds.top < rootBounds.height * 0.33f
+        )
+    }
+
+    @Test
     fun boardScreen_boardViewportControlsZoomAndCenterCurrentTurn() {
         val state = sampleGameState(currentPlayerIndex = 1).copy(
             players = listOf(
@@ -1432,10 +1556,12 @@ class SnakeLadderUiTest {
     fun boardScreen_routeEndpointTapsShowSnakeAndLadderDetails() {
         setBoardContent(Configuration.ORIENTATION_PORTRAIT)
 
-        composeRule.onNodeWithTag("ladder_endpoint_2_38_start").performClick()
+        composeRule.onNodeWithTag("ladder_endpoint_2_38_start")
+            .performSemanticsAction(SemanticsActions.OnClick)
         composeRule.onNodeWithTag("board_focus_label").assertTextEquals("Ladder 2 climbs to 38")
 
-        composeRule.onNodeWithTag("snake_endpoint_99_54_head").performClick()
+        composeRule.onNodeWithTag("snake_endpoint_99_54_head")
+            .performSemanticsAction(SemanticsActions.OnClick)
         composeRule.onNodeWithTag("board_focus_label").assertTextEquals("Snake 99 slides to 54")
     }
 
@@ -1621,6 +1747,48 @@ class SnakeLadderUiTest {
         composeRule.onNodeWithTag("settings_manual_bot_roll_switch").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithTag("settings_vibration_switch").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithTag("settings_vibration_availability").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsDialog_remainingChipSelectorsExposeSelectedState() {
+        setBoardContent(Configuration.ORIENTATION_PORTRAIT)
+
+        composeRule.onNodeWithTag("settings_button").performClick()
+
+        composeRule.onNodeWithTag("settings_tab_match").assertIsSelected()
+        composeRule.onNodeWithTag("settings_tab_visual").performClick()
+        composeRule.onNodeWithTag("settings_tab_visual").assertIsSelected()
+        composeRule.onNodeWithTag("settings_tab_match").assertIsNotSelected()
+        val vibrantThemeState = composeRule.onNodeWithTag("settings_theme_vibrant_chip", useUnmergedTree = true)
+            .fetchSemanticsNode("Vibrant theme card missing")
+            .config
+            .getOrElseNullable(SemanticsProperties.StateDescription) { null }
+        assertEquals("Selected", vibrantThemeState)
+
+        val initialMutedThemeState = composeRule.onNodeWithTag("settings_theme_premium_muted_chip", useUnmergedTree = true)
+            .fetchSemanticsNode("Premium Muted theme card missing")
+            .config
+            .getOrElseNullable(SemanticsProperties.StateDescription) { null }
+        assertEquals("Not selected", initialMutedThemeState)
+
+        composeRule.onNodeWithTag("settings_theme_premium_muted_chip").performScrollTo().performClick()
+        val mutedThemeState = composeRule.onNodeWithTag("settings_theme_premium_muted_chip", useUnmergedTree = true)
+            .fetchSemanticsNode("Premium Muted theme card missing")
+            .config
+            .getOrElseNullable(SemanticsProperties.StateDescription) { null }
+        assertEquals("Selected", mutedThemeState)
+
+        composeRule.onNodeWithTag("settings_tab_audio").performClick()
+        composeRule.onNodeWithTag("settings_soundtrack_classic").performScrollTo().assertIsSelected()
+        composeRule.onNodeWithTag("settings_soundtrack_comeback").assertIsNotSelected()
+        composeRule.onNodeWithTag("settings_soundtrack_comeback").performClick()
+        composeRule.onNodeWithTag("settings_soundtrack_comeback").assertIsSelected()
+
+        composeRule.onNodeWithTag("settings_tab_controls").performScrollTo().performClick()
+        composeRule.onNodeWithTag("settings_bot_pace_standard").performScrollTo().assertIsSelected()
+        composeRule.onNodeWithTag("settings_bot_pace_quick").performScrollTo().assertIsNotSelected()
+        composeRule.onNodeWithTag("settings_bot_pace_quick").performScrollTo().performClick()
+        composeRule.onNodeWithTag("settings_bot_pace_quick").assertIsSelected()
     }
 
     @Test

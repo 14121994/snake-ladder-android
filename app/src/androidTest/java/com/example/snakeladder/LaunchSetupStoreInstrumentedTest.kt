@@ -50,6 +50,7 @@ class LaunchSetupStoreInstrumentedTest {
         assertEquals(MatchModePreset.CLASSIC, loaded.matchMode)
         assertEquals(BoardLayouts.CLASSIC_ID, loaded.boardLayoutId)
         assertEquals(BotPersonality.STEADY, loaded.botPersonality)
+        assertEquals(false, loaded.newGameGuideDismissed)
     }
 
     @Test
@@ -61,7 +62,8 @@ class LaunchSetupStoreInstrumentedTest {
                 mode = GameMode.VS_BOT,
                 matchMode = MatchModePreset.TIME_ATTACK,
                 boardLayoutId = BoardLayouts.SPEED_RUN_ID,
-                botPersonality = BotPersonality.RISKY
+                botPersonality = BotPersonality.RISKY,
+                newGameGuideDismissed = true
             )
         )
 
@@ -72,5 +74,6 @@ class LaunchSetupStoreInstrumentedTest {
         assertEquals(MatchModePreset.TIME_ATTACK, loaded.matchMode)
         assertEquals(BoardLayouts.SPEED_RUN_ID, loaded.boardLayoutId)
         assertEquals(BotPersonality.RISKY, loaded.botPersonality)
+        assertEquals(true, loaded.newGameGuideDismissed)
     }
 }

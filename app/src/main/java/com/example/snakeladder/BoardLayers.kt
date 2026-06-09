@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.Alignment
@@ -985,6 +986,7 @@ private fun RouteTapTarget(
     onClick: () -> Unit
 ) {
     val (row, col) = positionToRowCol(cell)
+    val routeClick = onClick
     Box(
         modifier = Modifier
             .offset(
@@ -994,7 +996,13 @@ private fun RouteTapTarget(
             .size(targetSize)
             .clip(CircleShape)
             .clickable(onClick = onClick)
-            .semantics { this.contentDescription = contentDescription }
+            .semantics {
+                this.contentDescription = contentDescription
+                onClick(label = "Highlight route") {
+                    routeClick()
+                    true
+                }
+            }
             .testTag(testTag)
     )
 }

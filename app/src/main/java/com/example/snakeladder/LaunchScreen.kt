@@ -96,6 +96,7 @@ internal fun LaunchLayout(
     playerSetups: List<PlayerSetup> = defaultPlayerSetups(),
     dailyChallenge: DailyChallenge = DailyChallengeCatalog.today(),
     savedGames: List<SavedGameSnapshot>,
+    showNewGameGuide: Boolean = true,
     onRefreshSavedGames: () -> Unit,
     onSelectPlayers: (Int) -> Unit,
     onSelectMode: (GameMode) -> Unit,
@@ -115,6 +116,7 @@ internal fun LaunchLayout(
     onResetProfile: () -> Unit = {},
     onEquipProfileItem: (String) -> String = { "Profile equipment unavailable." },
     onPurchaseStoreItem: (String) -> String = { "Store unavailable." },
+    onDismissNewGameGuide: () -> Unit = {},
     onStart: (GameDifficulty) -> Unit
 ) {
     val configuration = LocalConfiguration.current
@@ -129,6 +131,7 @@ internal fun LaunchLayout(
     var showCampaignDialog by rememberSaveable { mutableStateOf(false) }
     var showNewGameDialog by rememberSaveable { mutableStateOf(false) }
     var showStoreDialog by rememberSaveable { mutableStateOf(false) }
+    var newGameGuideHiddenInSession by rememberSaveable { mutableStateOf(false) }
     val nextCampaignNode = CampaignCatalog.nextPlayableNode(playerProfile)
     val backgroundPulse by rememberInfiniteTransition(label = "launch_bg_pulse").animateFloat(
         initialValue = 0f,
@@ -356,6 +359,7 @@ internal fun LaunchLayout(
                 selectedBotPersonality = selectedBotPersonality,
                 playerProfile = playerProfile,
                 playerSetups = playerSetups,
+                showSetupGuide = showNewGameGuide && !newGameGuideHiddenInSession,
                 onSelectPlayers = onSelectPlayers,
                 onSelectMode = onSelectMode,
                 onSelectMatchMode = onSelectMatchMode,
@@ -363,6 +367,10 @@ internal fun LaunchLayout(
                 onSaveCustomBoard = onSaveCustomBoard,
                 onSelectBotPersonality = onSelectBotPersonality,
                 onUpdatePlayerSetup = onUpdatePlayerSetup,
+                onDismissSetupGuide = {
+                    newGameGuideHiddenInSession = true
+                    onDismissNewGameGuide()
+                },
                 onStart = { difficulty ->
                     showNewGameDialog = false
                     onStart(difficulty)
@@ -1143,6 +1151,7 @@ private fun NewGameDialog(
     selectedBotPersonality: BotPersonality,
     playerProfile: PlayerProfile,
     playerSetups: List<PlayerSetup>,
+    showSetupGuide: Boolean,
     onSelectPlayers: (Int) -> Unit,
     onSelectMode: (GameMode) -> Unit,
     onSelectMatchMode: (MatchModePreset) -> Unit,
@@ -1150,11 +1159,13 @@ private fun NewGameDialog(
     onSaveCustomBoard: (String, String) -> Boolean,
     onSelectBotPersonality: (BotPersonality) -> Unit,
     onUpdatePlayerSetup: (Int, PlayerSetup) -> Unit,
+    onDismissSetupGuide: () -> Unit,
     onStart: (GameDifficulty) -> Unit,
     onDismiss: () -> Unit
 ) {
     var selectedDifficulty by rememberSaveable { mutableStateOf(GameDifficulty.EASY) }
     var showAdvancedSetup by rememberSaveable { mutableStateOf(false) }
+    var guidedSetupStep by rememberSaveable { mutableStateOf(NewGameSetupStep.SETUP) }
     val selectedBoard = BoardLayouts.byId(selectedBoardLayoutId)
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
@@ -1193,6 +1204,11 @@ private fun NewGameDialog(
         }
     }
 
+    fun selectGuidedStep(step: NewGameSetupStep) {
+        guidedSetupStep = step
+        scrollToStep(step)
+    }
+
     GameSheetDialog(
         testTag = "new_game_dialog",
         title = "New Game",
@@ -1205,8 +1221,28 @@ private fun NewGameDialog(
         ) {
             SetupJourneyStrip(
                 activeStep = activeStep,
-                onSelectStep = ::scrollToStep
+                onSelectStep = ::selectGuidedStep
             )
+            if (showSetupGuide) {
+                GuidedSetupTutorialCard(
+                    currentStep = guidedSetupStep,
+                    onBack = {
+                        guidedSetupStep.previous()?.let(::selectGuidedStep)
+                    },
+                    onNext = {
+                        val nextStep = guidedSetupStep.next()
+                        if (nextStep == null) {
+                            onDismissSetupGuide()
+                        } else {
+                            selectGuidedStep(nextStep)
+                        }
+                    },
+                    onStartSetup = {
+                        selectGuidedStep(NewGameSetupStep.SETUP)
+                    },
+                    onHideTips = onDismissSetupGuide
+                )
+            }
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -1349,7 +1385,10 @@ private fun NewGameDialog(
                             modifier = Modifier
                                 .weight(1.3f)
                                 .testTag("new_game_start_button"),
-                            onClick = { onStart(selectedDifficulty) }
+                            onClick = {
+                                onDismissSetupGuide()
+                                onStart(selectedDifficulty)
+                            }
                         ) {
                             Text("Start Match")
                         }
@@ -1376,12 +1415,46 @@ private data class CustomBoardEditorSnapshot(
 private enum class NewGameSetupStep(
     val label: String,
     val testTag: String,
-    val contentDescription: String
+    val contentDescription: String,
+    val guideTitle: String,
+    val guideText: String
 ) {
-    SETUP("1 Setup", "new_game_step_setup", "Jump to Quick Setup"),
-    MODE("2 Mode", "new_game_step_mode", "Jump to Match Mode"),
-    BOARD("3 Board", "new_game_step_board", "Jump to Board Layout"),
-    REVIEW("4 Review", "new_game_step_review", "Jump to Review")
+    SETUP(
+        "1 Setup",
+        "new_game_step_setup",
+        "Jump to Quick Setup",
+        "Quick setup",
+        "Choose who is playing, name local players, pick a bot if needed, then set the difficulty."
+    ),
+    MODE(
+        "2 Mode",
+        "new_game_step_mode",
+        "Jump to Match Mode",
+        "Match mode",
+        "Pick the rule style: Classic is easiest, while Timed, Party, Cards, and 2v2 add more decisions."
+    ),
+    BOARD(
+        "3 Board",
+        "new_game_step_board",
+        "Jump to Board Layout",
+        "Board layout",
+        "Preview the board before starting. Short boards are better for quick sessions; chaotic boards suit repeat play."
+    ),
+    REVIEW(
+        "4 Review",
+        "new_game_step_review",
+        "Jump to Review",
+        "Review and start",
+        "Check the ready summary at the bottom, open advanced rules only if you want details, then start the match."
+    )
+}
+
+private fun NewGameSetupStep.next(): NewGameSetupStep? {
+    return NewGameSetupStep.entries.getOrNull(ordinal + 1)
+}
+
+private fun NewGameSetupStep.previous(): NewGameSetupStep? {
+    return NewGameSetupStep.entries.getOrNull(ordinal - 1)
 }
 
 private data class CustomBoardValidatedRow(
@@ -1450,10 +1523,10 @@ private fun SetupJourneyStrip(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(999.dp))
-                    .background(if (selected) Color(0xFF184F9F) else Color.White)
+                    .background(if (selected) strongSelectedChipContainer else neutralChipContainer)
                     .border(
                         width = 1.dp,
-                        color = if (selected) Color(0xFF184F9F) else Color(0xFFD4E0EE),
+                        color = if (selected) strongSelectedChipBorder else neutralChipBorder,
                         shape = RoundedCornerShape(999.dp)
                     )
                     .heightIn(min = 36.dp)
@@ -1470,10 +1543,109 @@ private fun SetupJourneyStrip(
                     text = step.label,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = if (selected) Color.White else Color(0xFF5A6470),
+                    color = if (selected) Color.White else neutralChipLabel,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuidedSetupTutorialCard(
+    currentStep: NewGameSetupStep,
+    onBack: () -> Unit,
+    onNext: () -> Unit,
+    onStartSetup: () -> Unit,
+    onHideTips: () -> Unit
+) {
+    val stepNumber = currentStep.ordinal + 1
+    val totalSteps = NewGameSetupStep.entries.size
+    val nextLabel = if (currentStep.next() == null) "Finish" else "Next"
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFFEAF7F0))
+            .border(1.dp, Color(0xFFB7D8C4), RoundedCornerShape(14.dp))
+            .testTag("new_game_setup_guide")
+            .semantics {
+                contentDescription = "New Game setup guide. Step $stepNumber of $totalSteps. ${currentStep.guideTitle}."
+                stateDescription = "Step $stepNumber of $totalSteps"
+            }
+            .padding(12.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = "First-time setup guide",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1E5A38)
+                    )
+                    Text(
+                        text = "$stepNumber of $totalSteps: ${currentStep.guideTitle}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF173F2A),
+                        modifier = Modifier.testTag("new_game_setup_guide_step_label")
+                    )
+                }
+                TextButton(
+                    modifier = Modifier.testTag("new_game_setup_guide_hide_button"),
+                    onClick = onHideTips,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text("Hide tips")
+                }
+            }
+            Text(
+                text = currentStep.guideText,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF365545),
+                modifier = Modifier.testTag("new_game_setup_guide_text")
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("new_game_setup_guide_back_button"),
+                    enabled = currentStep.previous() != null,
+                    onClick = onBack,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Text("Back", maxLines = 1)
+                }
+                OutlinedButton(
+                    modifier = Modifier
+                        .weight(1.1f)
+                        .testTag("new_game_setup_guide_start_button"),
+                    onClick = onStartSetup,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Text("Setup", maxLines = 1)
+                }
+                Button(
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("new_game_setup_guide_next_button"),
+                    onClick = onNext,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Text(nextLabel, maxLines = 1)
+                }
             }
         }
     }
@@ -2305,6 +2477,8 @@ private fun PlayerCountPicker(
                         .testTag("new_game_players_${count}_chip"),
                     selected = selectedPlayers == count,
                     onClick = { onSelectPlayers(count) },
+                    colors = strongFilterChipColors(),
+                    border = strongFilterChipBorder(selected = selectedPlayers == count),
                     label = { ChipLabel(count.toString()) }
                 )
             }
@@ -2440,14 +2614,14 @@ private fun RowScope.PlayerAvatarChoiceTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val background = if (selected) Color(0xFFE8F5E9) else Color(0xFFF8FBFF)
-    val border = if (selected) Color(0xFF2E7D32) else Color(0xFFD4E0EE)
+    val background = if (selected) Color(0xFFE1F6E8) else lightUnselectedCardContainer
+    val border = if (selected) Color(0xFF0E6B32) else lightUnselectedCardBorder
     Row(
         modifier = modifier
             .heightIn(min = 50.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(background)
-            .border(if (selected) 2.dp else 1.dp, border, RoundedCornerShape(10.dp))
+            .border(if (selected) 3.dp else 1.dp, border, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick)
             .semantics {
                 contentDescription = "Player $playerNumber ${choice.label} avatar"
@@ -2466,8 +2640,8 @@ private fun RowScope.PlayerAvatarChoiceTile(
         Text(
             text = choice.label,
             style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
-            color = if (selected) Color(0xFF1B5E20) else Color(0xFF24435F),
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (selected) Color(0xFF0E4E24) else lightUnselectedCardLabel,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -2685,12 +2859,12 @@ private fun SetupSegmentedRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         options.forEach { option ->
-            val selectedBackground = Color(0xFFDCEEFF)
+            val selectedBackground = strongSelectedChipContainer
             val unselectedBackground = Color.Transparent
-            val selectedBorder = Color(0xFF0D47A1)
+            val selectedBorder = strongSelectedChipBorder
             val unselectedBorder = Color.Transparent
-            val textColor = if (option.selected) Color(0xFF163A5F) else Color(0xFF4E342E)
-            val supportingColor = if (option.selected) Color(0xFF24435F) else Color(0xFF6D6259)
+            val textColor = if (option.selected) Color.White else lightUnselectedCardLabel
+            val supportingColor = if (option.selected) Color(0xFFD8E7FF) else lightUnselectedCardSupport
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -2698,7 +2872,7 @@ private fun SetupSegmentedRow(
                     .clip(RoundedCornerShape(11.dp))
                     .background(if (option.selected) selectedBackground else unselectedBackground)
                     .border(
-                        width = if (option.selected) 2.dp else 1.dp,
+                        width = if (option.selected) 3.dp else 1.dp,
                         color = if (option.selected) selectedBorder else unselectedBorder,
                         shape = RoundedCornerShape(11.dp)
                     )
@@ -2716,14 +2890,14 @@ private fun SetupSegmentedRow(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (option.selected) Color.White else Color(0xFFEFF4FA)),
+                        .background(if (option.selected) Color.White else lightUnselectedMarkerContainer),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = option.marker,
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (option.selected) Color(0xFF0D47A1) else Color(0xFF5A6470),
+                        fontWeight = if (option.selected) FontWeight.ExtraBold else FontWeight.Bold,
+                        color = if (option.selected) strongSelectedChipContainer else neutralChipLabel,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center
@@ -2733,7 +2907,7 @@ private fun SetupSegmentedRow(
                     text = option.title,
                     modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = if (option.selected) FontWeight.Bold else FontWeight.SemiBold,
                     color = textColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -3139,16 +3313,20 @@ private fun SetupChoiceCard(
     val shape = RoundedCornerShape(12.dp)
     val background = when {
         !enabled -> Color(0xFFF0F0F0)
-        selected -> Color(0xFFEAF2FF)
-        else -> Color.White
+        selected -> strongSelectedCardContainer
+        else -> lightUnselectedCardContainer
     }
     val border = when {
         !enabled -> Color(0xFFCCCCCC)
-        selected -> Color(0xFF1565C0)
-        else -> Color(0xFFD4C7B7)
+        selected -> strongSelectedCardBorder
+        else -> lightUnselectedCardBorder
     }
-    val content = if (enabled) Color(0xFF4E342E) else Color(0xFF8A8A8A)
-    val markerText = if (selected) Color(0xFF1565C0) else Color(0xFF6D6259)
+    val content = when {
+        !enabled -> Color(0xFF8A8A8A)
+        selected -> Color(0xFF133F73)
+        else -> lightUnselectedCardLabel
+    }
+    val markerText = if (selected) Color.White else neutralChipLabel
     val taggedModifier = if (testTag != null) modifier.testTag(testTag) else modifier
 
     Box(
@@ -3156,8 +3334,11 @@ private fun SetupChoiceCard(
             .heightIn(min = 74.dp)
             .clip(shape)
             .background(background)
-            .border(if (selected) 2.dp else 1.dp, border, shape)
+            .border(if (selected) 3.dp else 1.dp, border, shape)
             .clickable(enabled = enabled, onClick = onClick)
+            .semantics {
+                stateDescription = if (selected) "Selected" else "Not selected"
+            }
             .padding(10.dp)
     ) {
         Row(
@@ -3168,7 +3349,7 @@ private fun SetupChoiceCard(
                 modifier = Modifier
                     .size(34.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(if (selected) Color(0xFFD8E8FF) else Color(0xFFF4EFE8)),
+                    .background(if (selected) strongSelectedChipContainer else lightUnselectedMarkerContainer),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -3187,7 +3368,7 @@ private fun SetupChoiceCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                     color = content,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -3195,7 +3376,11 @@ private fun SetupChoiceCard(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (enabled) Color(0xFF6D6259) else Color(0xFF8A8A8A),
+                    color = when {
+                        !enabled -> Color(0xFF8A8A8A)
+                        selected -> Color(0xFF24435F)
+                        else -> lightUnselectedCardSupport
+                    },
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 14.sp

@@ -140,6 +140,8 @@ private fun StoreTypeTabs(
                         modifier = Modifier.weight(1f),
                         selected = selectedType == type,
                         onClick = { onSelectType(type) },
+                        colors = strongFilterChipColors(),
+                        border = strongFilterChipBorder(selected = selectedType == type),
                         label = {
                             Text(
                                 text = label,

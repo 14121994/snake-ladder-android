@@ -7,7 +7,8 @@ internal data class LaunchSetupSnapshot(
     val mode: GameMode = GameMode.LOCAL_MULTIPLAYER,
     val matchMode: MatchModePreset = MatchModePreset.CLASSIC,
     val boardLayoutId: String = BoardLayouts.CLASSIC_ID,
-    val botPersonality: BotPersonality = BotPersonality.STEADY
+    val botPersonality: BotPersonality = BotPersonality.STEADY,
+    val newGameGuideDismissed: Boolean = false
 )
 
 internal object LaunchSetupStore {
@@ -17,6 +18,7 @@ internal object LaunchSetupStore {
     private const val KEY_MATCH_MODE = "match_mode"
     private const val KEY_BOARD = "board"
     private const val KEY_BOT = "bot_personality"
+    private const val KEY_NEW_GAME_GUIDE_DISMISSED = "new_game_guide_dismissed"
 
     fun load(context: Context): LaunchSetupSnapshot {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -35,7 +37,8 @@ internal object LaunchSetupStore {
             mode = mode,
             matchMode = matchMode,
             boardLayoutId = prefs.getString(KEY_BOARD, BoardLayouts.CLASSIC_ID) ?: BoardLayouts.CLASSIC_ID,
-            botPersonality = botPersonality
+            botPersonality = botPersonality,
+            newGameGuideDismissed = prefs.getBoolean(KEY_NEW_GAME_GUIDE_DISMISSED, false)
         )
     }
 
@@ -47,6 +50,7 @@ internal object LaunchSetupStore {
             .putString(KEY_MATCH_MODE, snapshot.matchMode.name)
             .putString(KEY_BOARD, snapshot.boardLayoutId)
             .putString(KEY_BOT, snapshot.botPersonality.name)
+            .putBoolean(KEY_NEW_GAME_GUIDE_DISMISSED, snapshot.newGameGuideDismissed)
             .apply()
     }
 }
